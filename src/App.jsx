@@ -41,12 +41,12 @@ const t = {
     freeTitle: "Erste Stunde gratis ✦",
     freeDesc: "Dein erster Kurs ist vollständig kostenlos – keine Kreditkarte, kein Risiko.",
     aboTitle: "Danach flexibel weitermachen",
-    aboDesc: "Monatlich kündbar ab CHF 89 / Monat · Jahresabo mit Ersparnis · Unlimitierte Kurse.",
+    aboDesc: "Monatsabo für Kleingruppen-Training · Flexibel kündbar.",
     formTitle: "Jetzt anmelden",
     namePh: "Dein Name *",
     emailPh: "Deine Email *",
     telPh: "Telefon (optional)",
-    notizPh: "Notiz / Fragen (optional)",
+    notizPh: "Anmerkungen, Ziele oder aktuelle Beschwerden (optional)",
     submit: "Gratis Platz sichern →",
     submitting: "Wird gesendet...",
     successTitle: "Anmeldung erfolgreich!",
@@ -68,12 +68,12 @@ const t = {
     freeTitle: "First class free ✦",
     freeDesc: "Your first class is completely free – no credit card, no risk.",
     aboTitle: "Stay flexible afterwards",
-    aboDesc: "Cancel monthly from CHF 89 / month · Annual plan with savings · Unlimited classes.",
+    aboDesc: "Monthly subscription for small group training · Cancel anytime.",
     formTitle: "Sign up now",
     namePh: "Your name *",
     emailPh: "Your email *",
     telPh: "Phone (optional)",
-    notizPh: "Notes / Questions (optional)",
+    notizPh: "Notes, goals or current complaints (optional)",
     submit: "Reserve free spot →",
     submitting: "Sending...",
     successTitle: "Registration successful!",
@@ -140,12 +140,12 @@ export default function App() {
     }
   };
 
-  const inp = (field, placeholder) => (
+  const inp = (field, placeholder, required = false) => (
     <input
       value={form[field]}
       onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
       placeholder={placeholder}
-      style={{ width: "100%", background: "#f5f0ea", border: "1px solid #d9d1c5", padding: "12px 16px", fontFamily: "'Jost',sans-serif", fontSize: 14, fontWeight: 300, color: "#2a2035", outline: "none", marginBottom: 10 }}
+      style={{ width: "100%", background: "#f5f0ea", border: `1px solid ${required && !form[field] && status === "error" ? "#c0392b" : "#d9d1c5"}`, padding: "12px 16px", fontFamily: "'Jost',sans-serif", fontSize: 14, fontWeight: 300, color: "#2a2035", outline: "none", marginBottom: 10 }}
     />
   );
 
@@ -260,8 +260,8 @@ export default function App() {
                   <div className="fade" style={{ borderTop: "1px solid #d9d1c5", paddingTop: 28, marginBottom: 24 }}>
                     <div style={{ fontSize: 22, fontWeight: 400, color: "#2a2035", marginBottom: 20 }}>{tx.formTitle}</div>
                     <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-                      {inp("name", tx.namePh)}
-                      {inp("email", tx.emailPh)}
+                      {inp("name", tx.namePh, true)}
+                      {inp("email", tx.emailPh, true)}
                       {inp("telefon", tx.telPh)}
                     </div>
                     <textarea
@@ -271,8 +271,6 @@ export default function App() {
                       rows={3}
                       style={{ width: "100%", background: "#f5f0ea", border: "1px solid #d9d1c5", padding: "12px 16px", fontFamily: "'Jost',sans-serif", fontSize: 14, fontWeight: 300, color: "#2a2035", outline: "none", resize: "vertical", marginBottom: 16 }}
                     />
-
-                    {/* Datenschutz Checkbox */}
                     <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16 }}>
                       <input
                         type="checkbox"
@@ -287,7 +285,6 @@ export default function App() {
                         {tx.privacyEnd}
                       </label>
                     </div>
-
                     {formError && <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 12, color: "#c0392b", marginBottom: 10 }}>{formError}</div>}
                     {status === "error" && <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 12, color: "#c0392b", marginBottom: 10 }}>{tx.errorMsg}</div>}
                     <button className="btn-p" onClick={handleSubmit} disabled={status === "submitting"}>
