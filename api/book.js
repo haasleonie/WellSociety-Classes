@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { name, email, telefon, notiz, trialclass } = req.body;
+  const { name, email, telefon, notiz, trialclass, date } = req.body;
 
   if (!name || !email) {
     return res.status(400).json({ error: "Name and email required" });
@@ -26,7 +26,8 @@ export default async function handler(req, res) {
           Name: { title: [{ text: { content: name } }] },
           Email: { rich_text: [{ text: { content: email } }] },
           Telefon: { rich_text: [{ text: { content: telefon || "" } }] },
-          Trialclass: { rich_text: [{ text: { content: trialclass || "" } }] },
+          Trialclass: { rich_text: [{ text: { content: trialclass } }] },
+          Date: { date: { start: date } },
           Notiz: { rich_text: [{ text: { content: notiz || "" } }] },
         },
       }),
