@@ -1,15 +1,31 @@
 import { useState } from "react";
 
-const courses = {
-  MONTAG: { day: "MONTAG", dayEn: "MONDAY", date: 9, classes: [{ id: "pilates-mon", time: "17:15–18:15", name: "Pilates Flow", duration: "60 MIN", description: "Sanfte, kontrollierte Bewegungen für Kraft, Flexibilität und Körperbewusstsein. Perfekt für alle Levels – stärkt die Tiefenmuskulatur und verbessert die Haltung nachhaltig.", descriptionEn: "Gentle, controlled movements for strength, flexibility and body awareness. Perfect for all levels – strengthens deep muscles and improves posture." }] },
-  DIENSTAG: { day: "DIENSTAG", dayEn: "TUESDAY", date: 10, classes: [] },
-  MITTWOCH: { day: "MITTWOCH", dayEn: "WEDNESDAY", date: 11, classes: [{ id: "body-wed", time: "17:15–18:15", name: "Bootyburn", duration: "60 MIN", description: "Intensives Ganzkörper-Workout mit Gewichten und eigenem Körpergewicht. Definiert Muskeln, kurbelt den Stoffwechsel an und macht dich rundum leistungsfähiger.", descriptionEn: "Intensive full-body workout with weights and bodyweight. Defines muscles, boosts metabolism and makes you stronger overall." }, { id: "pilates-wed", time: "17:30–18:30", name: "Pilates Flow", duration: "60 MIN", description: "Sanfte, kontrollierte Bewegungen für Kraft, Flexibilität und Körperbewusstsein. Perfekt für alle Levels.", descriptionEn: "Gentle, controlled movements for strength, flexibility and body awareness. Perfect for all levels." }] },
-  DONNERSTAG: { day: "DONNERSTAG", dayEn: "THURSDAY", date: 12, classes: [] },
-  FREITAG: { day: "FREITAG", dayEn: "FRIDAY", date: 13, classes: [] },
-  SAMSTAG: { day: "SAMSTAG", dayEn: "SATURDAY", date: 14, classes: [{ id: "morning-sat", time: "10:15–11:15", name: "Morning Flow", duration: "60 MIN", description: "Sanftes Übungen um den Körper in Schwung zu bekommen für einen energiereichen Start in den Tag.", descriptionEn: "Gentle yoga, mobility and breathing exercises for an energised start to your day." }] },
+const getWeekDates = (weekOffset) => {
+  const now = new Date();
+  const day = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + weekOffset * 7);
+  return Array.from({ length: 6 }, (_, i) => {
+    const d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    return { date: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() };
+  });
 };
 
-const week = ["MONTAG", "DIENSTAG", "MITTWOCH", "DONNERSTAG", "FREITAG", "SAMSTAG"];
+const MONTHS_DE = ["JAN","FEB","MÄR","APR","MAI","JUN","JUL","AUG","SEP","OKT","NOV","DEZ"];
+const MONTHS_EN = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+
+const weekTemplate = [
+  { day: "MONTAG", dayEn: "MONDAY", classes: [{ id: "pilates-mon", time: "17:15–18:15", name: "Pilates Flow", duration: "60 MIN", description: "Sanfte, kontrollierte Bewegungen für Kraft, Flexibilität und Körperbewusstsein. Perfekt für alle Levels – stärkt die Tiefenmuskulatur und verbessert die Haltung nachhaltig.", descriptionEn: "Gentle, controlled movements for strength, flexibility and body awareness. Perfect for all levels – strengthens deep muscles and improves posture." }] },
+  { day: "DIENSTAG", dayEn: "TUESDAY", classes: [] },
+  { day: "MITTWOCH", dayEn: "WEDNESDAY", classes: [
+    { id: "bootyburn-wed", time: "17:15–18:15", name: "Bootyburn", duration: "60 MIN", description: "Gezieltes Kraft- und Formtraining für Po, Beine und Core. Intensive Übungen die brennen – und Ergebnisse zeigen. Perfekt für alle die ihren Körper definieren möchten.", descriptionEn: "Targeted strength and shaping training for glutes, legs and core. Intense exercises that burn – and deliver results. Perfect for those who want to define their body." },
+    { id: "pilates-wed", time: "17:30–18:30", name: "Pilates Flow", duration: "60 MIN", description: "Sanfte, kontrollierte Bewegungen für Kraft, Flexibilität und Körperbewusstsein. Perfekt für alle Levels.", descriptionEn: "Gentle, controlled movements for strength, flexibility and body awareness. Perfect for all levels." }
+  ]},
+  { day: "DONNERSTAG", dayEn: "THURSDAY", classes: [] },
+  { day: "FREITAG", dayEn: "FRIDAY", classes: [] },
+  { day: "SAMSTAG", dayEn: "SATURDAY", classes: [{ id: "morning-sat", time: "10:15–11:15", name: "Morning Glow", duration: "60 MIN", description: "Sanftes Yoga, Mobility und Atemübungen für einen energiereichen Start in den Tag.", descriptionEn: "Gentle yoga, mobility and breathing exercises for an energised start to your day." }] },
+];
 
 const t = {
   de: {
@@ -20,8 +36,7 @@ const t = {
     freeTitle: "Erste Stunde gratis ✦",
     freeDesc: "Dein erster Kurs ist vollständig kostenlos – keine Kreditkarte, kein Risiko.",
     aboTitle: "Danach flexibel weitermachen",
-    aboDesc: "Monatlich kündbar · Jahresabo mit Ersparnis · Unlimitierte Kurse.",
-    march: "MÄRZ",
+    aboDesc: "Monatlich kündbar ab CHF 89 / Monat · Jahresabo mit Ersparnis · Unlimitierte Kurse.",
     formTitle: "Jetzt anmelden",
     namePh: "Dein Name *",
     emailPh: "Deine Email *",
@@ -30,10 +45,11 @@ const t = {
     submit: "Gratis Platz sichern →",
     submitting: "Wird gesendet...",
     successTitle: "Anmeldung erfolgreich!",
-    successMsg: (name, course, date, time) => `Hallo ${name}! Dein Platz für ${course} am ${date}. März um ${time} ist reserviert. Deine erste Stunde ist gratis!`,
+    successMsg: (name, course, date, month) => `Hallo ${name}! Dein Platz für ${course} am ${date}. ${month} ist reserviert. Deine erste Stunde ist gratis!`,
     another: "Weiteren Kurs wählen",
     required: "Name und Email sind Pflichtfelder.",
     errorMsg: "Fehler beim Speichern. Bitte erneut versuchen.",
+    months: MONTHS_DE,
   },
   en: {
     subtitle: "Choose your course for this week",
@@ -43,8 +59,7 @@ const t = {
     freeTitle: "First class free ✦",
     freeDesc: "Your first class is completely free – no credit card, no risk.",
     aboTitle: "Stay flexible afterwards",
-    aboDesc: "Cancel monthly / month · Annual plan with savings · Unlimited classes.",
-    march: "MARCH",
+    aboDesc: "Cancel monthly from CHF 89 / month · Annual plan with savings · Unlimited classes.",
     formTitle: "Sign up now",
     namePh: "Your name *",
     emailPh: "Your email *",
@@ -53,15 +68,17 @@ const t = {
     submit: "Reserve free spot →",
     submitting: "Sending...",
     successTitle: "Registration successful!",
-    successMsg: (name, course, date, time) => `Hello ${name}! Your spot for ${course} on ${date} March at ${time} is reserved. First class is free!`,
+    successMsg: (name, course, date, month) => `Hello ${name}! Your spot for ${course} on ${date} ${month} is reserved. First class is free!`,
     another: "Choose another class",
     required: "Name and email are required.",
     errorMsg: "Error saving. Please try again.",
+    months: MONTHS_EN,
   },
 };
 
 export default function App() {
   const [lang, setLang] = useState("de");
+  const [weekOffset, setWeekOffset] = useState(0);
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", telefon: "", notiz: "" });
@@ -69,9 +86,15 @@ export default function App() {
   const [formError, setFormError] = useState("");
   const tx = t[lang];
 
-  const handleSelect = (cls, dayData) => {
-    if (selected?.id === cls.id) { setSelected(null); setShowForm(false); return; }
-    setSelected({ ...cls, day: lang === "de" ? dayData.day : dayData.dayEn, date: dayData.date });
+  const weekDates = getWeekDates(weekOffset);
+  const startDate = weekDates[0];
+  const endDate = weekDates[5];
+
+  const weekLabel = `${startDate.date}. ${tx.months[startDate.month - 1]} — ${endDate.date}. ${tx.months[endDate.month - 1]}`;
+
+  const handleSelect = (cls, dayData, dateInfo) => {
+    if (selected?.id === `${cls.id}-${weekOffset}`) { setSelected(null); setShowForm(false); return; }
+    setSelected({ ...cls, id: `${cls.id}-${weekOffset}`, day: lang === "de" ? dayData.day : dayData.dayEn, date: dateInfo.date, month: tx.months[dateInfo.month - 1] });
     setShowForm(false);
     setStatus("idle");
     setForm({ name: "", email: "", telefon: "", notiz: "" });
@@ -91,7 +114,7 @@ export default function App() {
           email: form.email,
           telefon: form.telefon,
           notiz: form.notiz,
-          trialclass: `${selected.name} – ${selected.date}. ${tx.march} ${selected.time}`,
+          trialclass: `${selected.name} – ${selected.date}. ${selected.month} ${selected.time}`,
         }),
       });
       if (!res.ok) throw new Error("Failed");
@@ -123,6 +146,9 @@ export default function App() {
         .btn-p:disabled{background:#9a8e84;cursor:not-allowed;}
         .btn-s{background:transparent;color:#3b2f4a;border:1px solid #3b2f4a;padding:12px 32px;font-family:'Jost',sans-serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
         .btn-s:hover{background:#3b2f4a;color:#f5f0ea;}
+        .nav-btn{background:none;border:none;padding:18px 28px;cursor:pointer;font-size:17px;color:#9a8e84;transition:color 0.2s;}
+        .nav-btn:hover{color:#3b2f4a;}
+        .nav-btn:disabled{color:#d9d1c5;cursor:not-allowed;}
         .lang-btn{background:none;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:2.5px;cursor:pointer;padding:6px 10px;transition:all 0.2s;text-transform:uppercase;}
         .lang-btn.al{color:#3b2f4a;border-bottom:1.5px solid #3b2f4a;}
         .lang-btn.il{color:#b0a498;border-bottom:1.5px solid transparent;}
@@ -148,30 +174,30 @@ export default function App() {
       </div>
 
       <div style={{ background: "#ede8e0", borderTop: "1px solid #d9d1c5", borderBottom: "1px solid #d9d1c5", display: "flex", alignItems: "center", marginTop: 20 }}>
-        <button style={{ background: "none", border: "none", padding: "18px 28px", cursor: "pointer", fontSize: 17, color: "#9a8e84" }}>←</button>
-        <div style={{ flex: 1, textAlign: "center", fontFamily: "'Jost',sans-serif", fontSize: 11, letterSpacing: 4, color: "#7a6e63" }}>9. {tx.march} — 14. {tx.march}</div>
-        <button style={{ background: "none", border: "none", padding: "18px 28px", cursor: "pointer", fontSize: 17, color: "#9a8e84" }}>→</button>
+        <button className="nav-btn" disabled={weekOffset <= 0} onClick={() => { setWeekOffset(w => w - 1); setSelected(null); setShowForm(false); }}>←</button>
+        <div style={{ flex: 1, textAlign: "center", fontFamily: "'Jost',sans-serif", fontSize: 11, letterSpacing: 4, color: "#7a6e63" }}>{weekLabel}</div>
+        <button className="nav-btn" disabled={weekOffset >= 4} onClick={() => { setWeekOffset(w => w + 1); setSelected(null); setShowForm(false); }}>→</button>
       </div>
 
       <div className="grid" style={{ maxWidth: 1080, margin: "28px auto 0", padding: "0 20px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 14 }}>
-        {week.map((dayKey) => {
-          const d = courses[dayKey];
-          const dayLabel = lang === "de" ? d.day : d.dayEn;
+        {weekTemplate.map((dayData, i) => {
+          const dateInfo = weekDates[i];
+          const dayLabel = lang === "de" ? dayData.day : dayData.dayEn;
           return (
-            <div key={dayKey}>
+            <div key={dayData.day}>
               <div style={{ background: "#e8e1d7", border: "1px solid #d9d1c5", padding: "14px 18px", display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 2 }}>
                 <span style={{ fontFamily: "'Jost',sans-serif", fontSize: 10, letterSpacing: 3, color: "#7a6e63" }}>{dayLabel}</span>
-                <span style={{ fontSize: 38, fontWeight: 300, color: "#2a2035", lineHeight: 1 }}>{d.date}</span>
+                <span style={{ fontSize: 38, fontWeight: 300, color: "#2a2035", lineHeight: 1 }}>{dateInfo.date}</span>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {d.classes.length === 0 ? (
+                {dayData.classes.length === 0 ? (
                   <div className="card" style={{ padding: "38px 18px", textAlign: "center", cursor: "default", minHeight: 110, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <span style={{ fontFamily: "'Jost',sans-serif", fontSize: 10, letterSpacing: 3, color: "#b0a498" }}>{tx.noClass}</span>
                   </div>
-                ) : d.classes.map((cls) => {
-                  const isActive = selected?.id === cls.id;
+                ) : dayData.classes.map((cls) => {
+                  const isActive = selected?.id === `${cls.id}-${weekOffset}`;
                   return (
-                    <div key={cls.id} className={`card${isActive ? " active" : ""}`} onClick={() => handleSelect(cls, d)} style={{ padding: "16px 18px", minHeight: 95 }}>
+                    <div key={cls.id} className={`card${isActive ? " active" : ""}`} onClick={() => handleSelect(cls, dayData, dateInfo)} style={{ padding: "16px 18px", minHeight: 95 }}>
                       <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 10, letterSpacing: 1.5, color: isActive ? "#c5b8d4" : "#9a8e84", marginBottom: 5 }}>{cls.time}</div>
                       <div style={{ fontSize: 21, fontWeight: 400, color: isActive ? "#f5f0ea" : "#2a2035", marginBottom: 5 }}>{cls.name}</div>
                       <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 10, letterSpacing: 2, color: isActive ? "#c5b8d4" : "#9a8e84" }}>{cls.duration}</div>
@@ -192,7 +218,7 @@ export default function App() {
                 <div style={{ fontSize: 46, color: "#6b4fa0", marginBottom: 10 }}>✦</div>
                 <div style={{ fontSize: 30, fontWeight: 400, color: "#2a2035", marginBottom: 8 }}>{tx.successTitle}</div>
                 <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 14, fontWeight: 300, color: "#7a6e63", lineHeight: 1.8, marginBottom: 28 }}>
-                  {tx.successMsg(form.name, selected.name, selected.date, selected.time)}
+                  {tx.successMsg(form.name, selected.name, selected.date, selected.month)}
                 </div>
                 <button className="btn-s" onClick={() => { setSelected(null); setShowForm(false); setStatus("idle"); }}>{tx.another}</button>
               </div>
@@ -200,7 +226,7 @@ export default function App() {
               <>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 18, marginBottom: 20 }}>
                   <div>
-                    <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 10, letterSpacing: 3, color: "#9a8e84", marginBottom: 7 }}>{selected.day} · {selected.date}. {tx.march} · {selected.time}</div>
+                    <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 10, letterSpacing: 3, color: "#9a8e84", marginBottom: 7 }}>{selected.day} · {selected.date}. {selected.month} · {selected.time}</div>
                     <div style={{ fontSize: 32, fontWeight: 400, color: "#2a2035" }}>{selected.name}</div>
                   </div>
                   <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" }}>
