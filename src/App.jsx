@@ -8,7 +8,12 @@ const getWeekDates = (weekOffset) => {
   return Array.from({ length: 6 }, (_, i) => {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
-    return { date: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() };
+    return {
+      date: d.getDate(),
+      month: d.getMonth() + 1,
+      year: d.getFullYear(),
+      iso: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
+    };
   });
 };
 
@@ -16,10 +21,10 @@ const MONTHS_DE = ["JAN","FEB","MÄR","APR","MAI","JUN","JUL","AUG","SEP","OKT",
 const MONTHS_EN = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
 
 const weekTemplate = [
-  { day: "MONTAG", dayEn: "MONDAY", classes: [{ id: "pilates-mon", time: "17:15–18:15", name: "Pilates Flow", duration: "60 MIN", description: "Sanfte, kontrollierte Bewegungen für Kraft, Flexibilität und Körperbewusstsein. Perfekt für alle Levels – stärkt die Tiefenmuskulatur und verbessert die Haltung nachhaltig.", descriptionEn: "Gentle, controlled movements for strength, flexibility and body awareness. Perfect for all levels – strengthens deep muscles and improves posture." }] },
+  { day: "MONTAG", dayEn: "MONDAY", classes: [{ id: "pilates-mon", time: "17:15–18:15", name: "Pilates Flow", duration: "60 MIN", description: "Sanfte, kontrollierte Bewegungen für Kraft, Flexibilität und Körperbewusstsein. Perfekt für alle Levels – stärkt die Tiefenmuskulatur und verbessert die Haltung nachhaltig.", descriptionEn: "Gentle, controlled movements for strength, flexibility and body awareness. Perfect for all levels." }] },
   { day: "DIENSTAG", dayEn: "TUESDAY", classes: [] },
   { day: "MITTWOCH", dayEn: "WEDNESDAY", classes: [
-    { id: "bootyburn-wed", time: "17:15–18:15", name: "Bootyburn", duration: "60 MIN", description: "Gezieltes Kraft- und Formtraining für Po, Beine und Core. Intensive Übungen die brennen – und Ergebnisse zeigen. Perfekt für alle die ihren Körper definieren möchten.", descriptionEn: "Targeted strength and shaping training for glutes, legs and core. Intense exercises that burn – and deliver results. Perfect for those who want to define their body." },
+    { id: "bootyburn-wed", time: "17:15–18:15", name: "Bootyburn", duration: "60 MIN", description: "Gezieltes Kraft- und Formtraining für Po, Beine und Core. Intensive Übungen die brennen – und Ergebnisse zeigen.", descriptionEn: "Targeted strength and shaping training for glutes, legs and core. Intense exercises that burn – and deliver results." },
     { id: "pilates-wed", time: "17:30–18:30", name: "Pilates Flow", duration: "60 MIN", description: "Sanfte, kontrollierte Bewegungen für Kraft, Flexibilität und Körperbewusstsein. Perfekt für alle Levels.", descriptionEn: "Gentle, controlled movements for strength, flexibility and body awareness. Perfect for all levels." }
   ]},
   { day: "DONNERSTAG", dayEn: "THURSDAY", classes: [] },
@@ -35,8 +40,8 @@ const t = {
     cta: "Kostenlos testen →",
     freeTitle: "Erste Stunde gratis ✦",
     freeDesc: "Dein erster Kurs ist vollständig kostenlos – keine Kreditkarte, kein Risiko.",
-    aboTitle: "Danach Monatsabo",
-    aboDesc: "Monatlich kündbar  · Fixer Platz gesichert",
+    aboTitle: "Danach flexibel weitermachen",
+    aboDesc: "Monatlich kündbar ab CHF 89 / Monat · Jahresabo mit Ersparnis · Unlimitierte Kurse.",
     formTitle: "Jetzt anmelden",
     namePh: "Dein Name *",
     emailPh: "Deine Email *",
@@ -49,6 +54,10 @@ const t = {
     another: "Weiteren Kurs wählen",
     required: "Name und Email sind Pflichtfelder.",
     errorMsg: "Fehler beim Speichern. Bitte erneut versuchen.",
+    privacy: "Ich stimme der ",
+    privacyLink: "Datenschutzerklärung",
+    privacyEnd: " zu und bin einverstanden, dass meine Daten für die Kursbuchung gespeichert werden.",
+    privacyRequired: "Bitte stimme der Datenschutzerklärung zu.",
     months: MONTHS_DE,
   },
   en: {
@@ -72,16 +81,22 @@ const t = {
     another: "Choose another class",
     required: "Name and email are required.",
     errorMsg: "Error saving. Please try again.",
+    privacy: "I agree to the ",
+    privacyLink: "Privacy Policy",
+    privacyEnd: " and consent to my data being stored for class booking purposes.",
+    privacyRequired: "Please agree to the Privacy Policy.",
     months: MONTHS_EN,
   },
 };
+
+const PRIVACY_URL = "https://well-society-classes.vercel.app/datenschutz";
 
 export default function App() {
   const [lang, setLang] = useState("de");
   const [weekOffset, setWeekOffset] = useState(0);
   const [selected, setSelected] = useState(null);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", telefon: "", notiz: "" });
+  const [form, setForm] = useState({ name: "", email: "", telefon: "", notiz: "", privacy: false });
   const [status, setStatus] = useState("idle");
   const [formError, setFormError] = useState("");
   const tx = t[lang];
@@ -89,20 +104,20 @@ export default function App() {
   const weekDates = getWeekDates(weekOffset);
   const startDate = weekDates[0];
   const endDate = weekDates[5];
-
   const weekLabel = `${startDate.date}. ${tx.months[startDate.month - 1]} — ${endDate.date}. ${tx.months[endDate.month - 1]}`;
 
   const handleSelect = (cls, dayData, dateInfo) => {
     if (selected?.id === `${cls.id}-${weekOffset}`) { setSelected(null); setShowForm(false); return; }
-    setSelected({ ...cls, id: `${cls.id}-${weekOffset}`, day: lang === "de" ? dayData.day : dayData.dayEn, date: dateInfo.date, month: tx.months[dateInfo.month - 1] });
+    setSelected({ ...cls, id: `${cls.id}-${weekOffset}`, day: lang === "de" ? dayData.day : dayData.dayEn, date: dateInfo.date, month: tx.months[dateInfo.month - 1], iso: dateInfo.iso });
     setShowForm(false);
     setStatus("idle");
-    setForm({ name: "", email: "", telefon: "", notiz: "" });
+    setForm({ name: "", email: "", telefon: "", notiz: "", privacy: false });
     setFormError("");
   };
 
   const handleSubmit = async () => {
     if (!form.name.trim() || !form.email.trim()) { setFormError(tx.required); return; }
+    if (!form.privacy) { setFormError(tx.privacyRequired); return; }
     setStatus("submitting");
     setFormError("");
     try {
@@ -114,7 +129,8 @@ export default function App() {
           email: form.email,
           telefon: form.telefon,
           notiz: form.notiz,
-          trialclass: `${selected.name} – ${selected.date}. ${selected.month} ${selected.time}`,
+          trialclass: `${selected.name} – ${selected.time}`,
+          date: selected.iso,
         }),
       });
       if (!res.ok) throw new Error("Failed");
@@ -253,8 +269,25 @@ export default function App() {
                       onChange={e => setForm(f => ({ ...f, notiz: e.target.value }))}
                       placeholder={tx.notizPh}
                       rows={3}
-                      style={{ width: "100%", background: "#f5f0ea", border: "1px solid #d9d1c5", padding: "12px 16px", fontFamily: "'Jost',sans-serif", fontSize: 14, fontWeight: 300, color: "#2a2035", outline: "none", resize: "vertical", marginBottom: 10 }}
+                      style={{ width: "100%", background: "#f5f0ea", border: "1px solid #d9d1c5", padding: "12px 16px", fontFamily: "'Jost',sans-serif", fontSize: 14, fontWeight: 300, color: "#2a2035", outline: "none", resize: "vertical", marginBottom: 16 }}
                     />
+
+                    {/* Datenschutz Checkbox */}
+                    <div style={{ display: "flex", alignItems: "flex-start", gap: 10, marginBottom: 16 }}>
+                      <input
+                        type="checkbox"
+                        id="privacy"
+                        checked={form.privacy}
+                        onChange={e => setForm(f => ({ ...f, privacy: e.target.checked }))}
+                        style={{ marginTop: 3, cursor: "pointer", accentColor: "#3b2f4a" }}
+                      />
+                      <label htmlFor="privacy" style={{ fontFamily: "'Jost',sans-serif", fontSize: 12, fontWeight: 300, color: "#7a6e63", lineHeight: 1.6, cursor: "pointer" }}>
+                        {tx.privacy}
+                        <a href={PRIVACY_URL} target="_blank" rel="noopener noreferrer" style={{ color: "#6b4fa0", textDecoration: "underline" }}>{tx.privacyLink}</a>
+                        {tx.privacyEnd}
+                      </label>
+                    </div>
+
                     {formError && <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 12, color: "#c0392b", marginBottom: 10 }}>{formError}</div>}
                     {status === "error" && <div style={{ fontFamily: "'Jost',sans-serif", fontSize: 12, color: "#c0392b", marginBottom: 10 }}>{tx.errorMsg}</div>}
                     <button className="btn-p" onClick={handleSubmit} disabled={status === "submitting"}>
