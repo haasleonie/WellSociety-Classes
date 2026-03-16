@@ -140,12 +140,12 @@ export default function App() {
     }
   };
 
-  const inp = (field, placeholder, required = false) => (
+  const inp = (field, placeholder) => (
     <input
       value={form[field]}
       onChange={e => setForm(f => ({ ...f, [field]: e.target.value }))}
       placeholder={placeholder}
-      style={{ width: "100%", background: "#f5f0ea", border: `1px solid ${required && !form[field] && status === "error" ? "#c0392b" : "#d9d1c5"}`, padding: "12px 16px", fontFamily: "'Jost',sans-serif", fontSize: 14, fontWeight: 300, color: "#2a2035", outline: "none", marginBottom: 10 }}
+      style={{ width: "100%", background: "#f5f0ea", border: "1px solid #d9d1c5", padding: "12px 16px", fontFamily: "'Jost',sans-serif", fontSize: 14, fontWeight: 300, color: "#2a2035", outline: "none", marginBottom: 10 }}
     />
   );
 
@@ -260,8 +260,8 @@ export default function App() {
                   <div className="fade" style={{ borderTop: "1px solid #d9d1c5", paddingTop: 28, marginBottom: 24 }}>
                     <div style={{ fontSize: 22, fontWeight: 400, color: "#2a2035", marginBottom: 20 }}>{tx.formTitle}</div>
                     <div className="two-col" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 16px" }}>
-                      {inp("name", tx.namePh, true)}
-                      {inp("email", tx.emailPh, true)}
+                      {inp("name", tx.namePh)}
+                      {inp("email", tx.emailPh)}
                       {inp("telefon", tx.telPh)}
                     </div>
                     <textarea
